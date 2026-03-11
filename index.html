@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<title>Controle de Associação</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef1f4;
+margin:0;
+}
+
+.login{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.cardLogin{
+background:white;
+padding:30px;
+border-radius:10px;
+width:320px;
+text-align:center;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.logo{
+font-size:60px;
+}
+
+h1{
+color:#0a7a35;
+}
+
+input{
+width:90%;
+padding:10px;
+margin:8px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button{
+width:95%;
+padding:10px;
+background:#0a7a35;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#08622b;
+}
+
+.app{
+display:none;
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+.dashboard{
+display:flex;
+gap:15px;
+margin-top:20px;
+}
+
+.card{
+flex:1;
+background:white;
+padding:15px;
+border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.alerta{
+color:red;
+font-weight:bold;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+background:white;
+}
+
+th,td{
+padding:10px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+th{
+background:#0a7a35;
+color:white;
+}
+
+.devedor{
+background:#ffd6d6;
+}
+
+.emdia{
+background:#d6ffd6;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login" id="login">
+
+<div class="cardLogin">
+
+<div class="logo">⚽</div>
+
+<h1>Controle de Associação</h1>
+
+<p>Gestão do Baba</p>
+
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+</div>
+
+</div>
+
+<div class="app" id="app">
+
+<h1>⚽ Controle do Baba</h1>
+
+<div class="dashboard">
+
+<div class="card">
+<h3>💰 Total arrecadado</h3>
+<p id="total">R$0</p>
+</div>
+
+<div class="card">
+<h3>👥 Pagamentos</h3>
+<p id="pagos">0</p>
+</div>
+
+<div class="card">
+<h3>🔔 Devedores</h3>
+<p id="devendo" class="alerta">0</p>
+</div>
+
+</div>
+
+<h2>Adicionar Associado</h2>
+
+<input id="nome" placeholder="Nome">
+<input id="telefone" placeholder="Telefone">
+<input type="date" id="pagamento">
+
+<button onclick="add()">Adicionar</button>
+<button onclick="exportar()">Exportar Planilha</button>
+
+<h2>Lista de Associados</h2>
+
+<table>
+
+<tr>
+<th>Nome</th>
+<th>Telefone</th>
+<th>Último Pagamento</th>
+<th>Status</th>
+</tr>
+
+<tbody id="lista"></tbody>
+
+</table>
+
+<h2>Registrar Convidado (R$5)</h2>
+
+<input id="convidado" placeholder="Nome">
+
+<button onclick="addConvidado()">Registrar</button>
+
+<ul id="listaConvidados"></ul>
+
+</div>
+
+<script>
+
+let associados = JSON.parse(localStorage.getItem("associados")) || []
+let convidados = JSON.parse(localStorage.getItem("convidados")) || []
+
+function login(){
+
+let u=document.getElementById("user").value
+let p=document.getElementById("pass").value
+
+if(u=="Gol" && p=="302022"){
+
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
+
+mostrar()
+
+}else{
+
+alert("Login incorreto")
+
+}
+
+}
+
+function salvar(){
+
+localStorage.setItem("associados",JSON.stringify(associados))
+
+}
+
+function add(){
+
+let nome=document.getElementById("nome").value
+let telefone=document.getElementById("telefone").value
+let pagamento=document.getElementById("pagamento").value
+
+associados.push({nome,telefone,pagamento})
+
+salvar()
+
+mostrar()
+
+}
+
+function dias(data){
+
+let hoje=new Date()
+let pag=new Date(data)
+
+return (hoje-pag)/(1000*60*60*24)
+
+}
+
+function mostrar(){
+
+let html=""
+let total=0
+let pagos=0
+let devendo=0
+
+associados.forEach(a=>{
+
+let d=dias(a.pagamento)
+
+let status="Em dia"
+let classe="emdia"
+
+if(d>60){
+
+status="🔔 Devendo"
+classe="devedor"
+devendo++
+
+}else{
+
+pagos++
+total+=20
+
+}
+
+html+=`
+<tr class="${classe}">
+<td>${a.nome}</td>
+<td>${a.telefone}</td>
+<td>${a.pagamento}</td>
+<td>${status}</td>
+</tr>
+`
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+document.getElementById("total").innerText="R$ "+total
+document.getElementById("pagos").innerText=pagos
+document.getElementById("devendo").innerText=devendo
+
+}
+
+function addConvidado(){
+
+let nome=document.getElementById("convidado").value
+
+convidados.push(nome)
+
+localStorage.setItem("convidados",JSON.stringify(convidados))
+
+mostrarConvidados()
+
+}
+
+function mostrarConvidados(){
+
+let html=""
+
+convidados.forEach(c=>{
+
+html+=`<li>${c} - R$5</li>`
+
+})
+
+document.getElementById("listaConvidados").innerHTML=html
+
+}
+
+function exportar(){
+
+let csv="Nome,Telefone,Ultimo Pagamento\n"
+
+associados.forEach(a=>{
+
+csv+=`${a.nome},${a.telefone},${a.pagamento}\n`
+
+})
+
+let blob=new Blob([csv])
+
+let link=document.createElement("a")
+
+link.href=URL.createObjectURL(blob)
+
+link.download="associados.csv"
+
+link.click()
+
+}
+
+mostrarConvidados()
+
+</script>
+
+</body>
+</html>
