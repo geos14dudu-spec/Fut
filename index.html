@@ -1,9 +1,12 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
+
 <meta charset="UTF-8">
-<title>Controle de Associação</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Controle do Baba</title>
 
 <style>
 
@@ -20,70 +23,52 @@ align-items:center;
 height:100vh;
 }
 
-.cardLogin{
+.card{
 background:white;
 padding:30px;
 border-radius:10px;
-width:320px;
+width:300px;
 text-align:center;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-.logo{
-font-size:60px;
-}
-
-h1{
-color:#0a7a35;
-}
-
-input{
+input,select{
 width:90%;
 padding:10px;
-margin:8px;
+margin:6px;
 border-radius:6px;
 border:1px solid #ccc;
 }
 
 button{
-width:95%;
-padding:10px;
+padding:8px 12px;
 background:#0a7a35;
 color:white;
 border:none;
 border-radius:6px;
 cursor:pointer;
-}
-
-button:hover{
-background:#08622b;
+margin:2px;
 }
 
 .app{
 display:none;
-max-width:1000px;
-margin:auto;
 padding:20px;
+max-width:900px;
+margin:auto;
 }
 
-.dashboard{
+.cards{
 display:flex;
 gap:15px;
-margin-top:20px;
+flex-wrap:wrap;
+margin-bottom:20px;
 }
 
-.card{
-flex:1;
+.box{
 background:white;
 padding:15px;
-border-radius:8px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+border-radius:10px;
+flex:1;
 text-align:center;
-}
-
-.alerta{
-color:red;
-font-weight:bold;
 }
 
 table{
@@ -94,8 +79,8 @@ background:white;
 }
 
 th,td{
-padding:10px;
 border:1px solid #ddd;
+padding:8px;
 text-align:center;
 }
 
@@ -104,13 +89,9 @@ background:#0a7a35;
 color:white;
 }
 
-.devedor{
-background:#ffd6d6;
-}
-
-.emdia{
-background:#d6ffd6;
-}
+.emdia{background:#d6ffd6;}
+.amarelo{background:#fff3b0;}
+.vermelho{background:#ffd6d6;}
 
 </style>
 </head>
@@ -119,13 +100,9 @@ background:#d6ffd6;
 
 <div class="login" id="login">
 
-<div class="cardLogin">
+<div class="card">
 
-<div class="logo">⚽</div>
-
-<h1>Controle de Associação</h1>
-
-<p>Gestão do Baba</p>
+<h2>⚽ Controle do Baba</h2>
 
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
@@ -138,23 +115,23 @@ background:#d6ffd6;
 
 <div class="app" id="app">
 
-<h1>⚽ Controle do Baba</h1>
+<h2>⚽ Controle do Baba</h2>
 
-<div class="dashboard">
+<div class="cards">
 
-<div class="card">
-<h3>💰 Total arrecadado</h3>
-<p id="total">R$0</p>
+<div class="box">
+<h3>💰 Caixa</h3>
+<p id="total">R$ 0</p>
 </div>
 
-<div class="card">
+<div class="box">
 <h3>👥 Pagamentos</h3>
-<p id="pagos">0</p>
+<p id="pagamentos">0</p>
 </div>
 
-<div class="card">
+<div class="box">
 <h3>🔔 Devedores</h3>
-<p id="devendo" class="alerta">0</p>
+<p id="devedores">0</p>
 </div>
 
 </div>
@@ -162,11 +139,14 @@ background:#d6ffd6;
 <h2>Adicionar Associado</h2>
 
 <input id="nome" placeholder="Nome">
-<input id="telefone" placeholder="Telefone">
-<input type="date" id="pagamento">
+<input id="dataEntrada" type="date">
+
+<select id="pagou">
+<option value="nao">Não pagou</option>
+<option value="sim">Já pagou</option>
+</select>
 
 <button onclick="add()">Adicionar</button>
-<button onclick="exportar()">Exportar Planilha</button>
 
 <h2>Lista de Associados</h2>
 
@@ -174,9 +154,11 @@ background:#d6ffd6;
 
 <tr>
 <th>Nome</th>
-<th>Telefone</th>
+<th>Data que entrou</th>
 <th>Último Pagamento</th>
+<th>Total Pago</th>
 <th>Status</th>
+<th>Ações</th>
 </tr>
 
 <tbody id="lista"></tbody>
@@ -186,10 +168,18 @@ background:#d6ffd6;
 <h2>Registrar Convidado (R$5)</h2>
 
 <input id="convidado" placeholder="Nome">
-
 <button onclick="addConvidado()">Registrar</button>
 
 <ul id="listaConvidados"></ul>
+
+<h2>Registrar Despesa</h2>
+
+<input id="descDespesa" placeholder="Ex: Bola nova">
+<input id="valorDespesa" type="number" placeholder="Valor">
+
+<button onclick="addDespesa()">Adicionar Despesa</button>
+
+<ul id="listaDespesas"></ul>
 
 </div>
 
@@ -197,6 +187,7 @@ background:#d6ffd6;
 
 let associados = JSON.parse(localStorage.getItem("associados")) || []
 let convidados = JSON.parse(localStorage.getItem("convidados")) || []
+let despesas = JSON.parse(localStorage.getItem("despesas")) || []
 
 function login(){
 
@@ -208,7 +199,7 @@ if(u=="Gol" && p=="302022"){
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 
-mostrar()
+atualizar()
 
 }else{
 
@@ -219,31 +210,92 @@ alert("Login incorreto")
 }
 
 function salvar(){
-
-localStorage.setItem("associados",JSON.stringify(associados))
-
+localStorage.setItem("associados", JSON.stringify(associados))
 }
 
 function add(){
 
 let nome=document.getElementById("nome").value
-let telefone=document.getElementById("telefone").value
-let pagamento=document.getElementById("pagamento").value
+let dataEntrada=document.getElementById("dataEntrada").value
+let pagou=document.getElementById("pagou").value
 
-associados.push({nome,telefone,pagamento})
+if(!nome || !dataEntrada) return alert("Preencha os campos")
+
+let valor=0
+let pagamento=null
+
+if(pagou=="sim"){
+valor=5
+pagamento=new Date()
+}
+
+associados.push({
+nome:nome,
+dataEntrada:dataEntrada,
+pagamento:pagamento,
+valor:valor
+})
+
+document.getElementById("nome").value=""
+document.getElementById("dataEntrada").value=""
 
 salvar()
+atualizar()
 
-mostrar()
+}
+
+function pagar5(i){
+
+associados[i].valor += 5
+associados[i].pagamento = new Date()
+
+salvar()
+atualizar()
+
+}
+
+function pagarManual(i){
+
+let valor = prompt("Digite o valor")
+
+if(valor===null) return
+
+associados[i].valor = parseFloat(valor)
+associados[i].pagamento = new Date()
+
+salvar()
+atualizar()
+
+}
+
+function remover(i){
+
+if(confirm("Remover associado?")){
+
+associados.splice(i,1)
+
+salvar()
+atualizar()
+
+}
 
 }
 
 function dias(data){
 
-let hoje=new Date()
-let pag=new Date(data)
+if(!data) return 999
 
-return (hoje-pag)/(1000*60*60*24)
+let hoje=new Date()
+
+return (hoje-new Date(data))/(1000*60*60*24)
+
+}
+
+function atualizar(){
+
+mostrar()
+mostrarConvidados()
+mostrarDespesas()
 
 }
 
@@ -251,53 +303,72 @@ function mostrar(){
 
 let html=""
 let total=0
-let pagos=0
-let devendo=0
+let pagamentos=0
+let devedores=0
 
-associados.forEach(a=>{
+for(let i=0;i<associados.length;i++){
+
+let a=associados[i]
+
+total += a.valor
+if(a.valor>0) pagamentos++
 
 let d=dias(a.pagamento)
 
-let status="Em dia"
 let classe="emdia"
+let status="Em dia"
 
 if(d>60){
-
-status="🔔 Devendo"
-classe="devedor"
-devendo++
-
-}else{
-
-pagos++
-total+=5
-
+classe="vermelho"
+status="🔴 2 meses devendo"
+devedores++
+}
+else if(d>30){
+classe="amarelo"
+status="🟡 1 mês devendo"
+devedores++
 }
 
 html+=`
 <tr class="${classe}">
 <td>${a.nome}</td>
-<td>${a.telefone}</td>
-<td>${a.pagamento}</td>
+<td>${a.dataEntrada}</td>
+<td>${a.pagamento?new Date(a.pagamento).toLocaleDateString():"-"}</td>
+<td>R$ ${a.valor}</td>
 <td>${status}</td>
+<td>
+<button onclick="pagar5(${i})">+5</button>
+<button onclick="pagarManual(${i})">Valor</button>
+<button onclick="remover(${i})">❌</button>
+</td>
 </tr>
 `
 
+}
+
+let totalDespesas=0
+
+despesas.forEach(d=>{
+totalDespesas += d.valor
 })
 
-document.getElementById("lista").innerHTML=html
+let caixa = total - totalDespesas
 
-document.getElementById("total").innerText="R$ "+total
-document.getElementById("pagos").innerText=pagos
-document.getElementById("devendo").innerText=devendo
+document.getElementById("lista").innerHTML=html
+document.getElementById("total").innerText="R$ "+caixa
+document.getElementById("pagamentos").innerText=pagamentos
+document.getElementById("devedores").innerText=devedores
 
 }
 
 function addConvidado(){
 
 let nome=document.getElementById("convidado").value
+if(!nome) return
 
 convidados.push(nome)
+
+document.getElementById("convidado").value=""
 
 localStorage.setItem("convidados",JSON.stringify(convidados))
 
@@ -310,40 +381,46 @@ function mostrarConvidados(){
 let html=""
 
 convidados.forEach(c=>{
-
 html+=`<li>${c} - R$5</li>`
-
 })
 
 document.getElementById("listaConvidados").innerHTML=html
 
 }
 
-function exportar(){
+function addDespesa(){
 
-let csv="Nome,Telefone,Ultimo Pagamento\n"
+let desc=document.getElementById("descDespesa").value
+let valor=parseFloat(document.getElementById("valorDespesa").value)
 
-associados.forEach(a=>{
+if(!desc || !valor) return alert("Preencha a despesa")
 
-csv+=`${a.nome},${a.telefone},${a.pagamento}\n`
+despesas.push({descricao:desc,valor:valor})
 
-})
+document.getElementById("descDespesa").value=""
+document.getElementById("valorDespesa").value=""
 
-let blob=new Blob([csv])
+localStorage.setItem("despesas",JSON.stringify(despesas))
 
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="associados.csv"
-
-link.click()
+mostrarDespesas()
+mostrar()
 
 }
 
-mostrarConvidados()
+function mostrarDespesas(){
+
+let html=""
+
+despesas.forEach(d=>{
+html+=`<li>${d.descricao} - R$ ${d.valor}</li>`
+})
+
+document.getElementById("listaDespesas").innerHTML=html
+
+}
 
 </script>
 
 </body>
 </html>
+```
